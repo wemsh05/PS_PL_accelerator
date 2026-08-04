@@ -1,0 +1,42 @@
+{
+   "ActiveEmotionalView":"Default View",
+   "Default View_ScaleFactor":"0.929544",
+   "Default View_TopLeft":"-183,30",
+   "ExpandedHierarchyInLayout":"",
+   "guistr":"# # String gsaved with Nlview 7.0r6  2020-01-29 bk=1.5227 VDI=41 GEI=36 GUI=JA:9.0 non-TLS
+#  -string -flagsOSRD
+preplace port diff_clock_rtl_0 -pg 1 -lvl 0 -x -50 -y 480 -defaultsOSRD
+preplace port rxd -pg 1 -lvl 0 -x -50 -y 390 -defaultsOSRD
+preplace port txd -pg 1 -lvl 5 -x 1450 -y 210 -defaultsOSRD
+preplace port sys_clk_p -pg 1 -lvl 0 -x -50 -y 540 -defaultsOSRD
+preplace port sys_clk_n -pg 1 -lvl 0 -x -50 -y 510 -defaultsOSRD
+preplace port sys_rst_n -pg 1 -lvl 0 -x -50 -y 420 -defaultsOSRD
+preplace inst zynq_ultra_ps_e_0 -pg 1 -lvl 2 -x 590 -y 260 -defaultsOSRD
+preplace inst ps8_0_axi_periph -pg 1 -lvl 3 -x 1070 -y 130 -defaultsOSRD
+preplace inst rst_ps8_0_99M -pg 1 -lvl 2 -x 590 -y 450 -defaultsOSRD
+preplace inst clk_wiz_0 -pg 1 -lvl 3 -x 1070 -y 510 -defaultsOSRD
+preplace inst top_system_level_0 -pg 1 -lvl 4 -x 1330 -y 260 -defaultsOSRD
+preplace netloc zynq_ultra_ps_e_0_pl_resetn0 1 1 2 180 560 880
+preplace netloc rst_ps8_0_99M_peripheral_aresetn 1 2 2 900 320 N
+preplace netloc sys_clk_p_0_1 1 0 3 NJ 540 150 570 920J
+preplace netloc sys_clk_n_0_1 1 0 3 NJ 510 160 550 900J
+preplace netloc top_system_level_0_txd 1 4 1 1430 210n
+preplace netloc clk_wiz_0_clk_out1 1 3 1 1210 220n
+preplace netloc clk_wiz_0_clk_out2 1 3 1 1220 240n
+preplace netloc rxd_1 1 0 4 NJ 390 150 160 930J 280 N
+preplace netloc zynq_ultra_ps_e_0_pl_clk0 1 1 3 180 170 920 300 N
+preplace netloc clk_wiz_0_locked 1 1 3 190 600 NJ 600 1220
+preplace netloc rst_ps8_0_99M_interconnect_aresetn 1 2 2 910J 260 N
+preplace netloc sys_rst_n_1 1 0 2 -30J 490 170
+preplace netloc ps8_0_axi_periph_M00_AXI 1 3 1 1210 130n
+preplace netloc diff_clock_rtl_0_1 1 0 3 NJ 480 160 350 890J
+preplace netloc zynq_ultra_ps_e_0_M_AXI_HPM0_LPD 1 2 1 880 70n
+levelinfo -pg 1 -50 130 590 1070 1330 1450
+pagesize -pg 1 -db -bbox -sgen -200 -90 1520 720
+"
+}
+{
+   "da_axi4_cnt":"3",
+   "da_board_cnt":"2",
+   "da_clkrst_cnt":"3"
+}

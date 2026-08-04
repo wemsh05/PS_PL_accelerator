@@ -1,0 +1,119 @@
+//
+//
+//#include <stdio.h>
+//#include "platform.h"
+//#include "xil_printf.h"
+//#include "xil_io.h"          // Hardware I/O functions: Xil_Out32, Xil_In32
+//#include "xparameters.h"    // Contains XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+//
+//// Hardware Base Address from xparameters.h
+//#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+//
+//// Register Offsets
+//#define REG0_OFFSET 0x00
+//#define REG1_OFFSET 0x04
+//#define REG2_OFFSET 0x08
+//#define REG3_OFFSET 0x0C
+//
+//int main()
+//{
+//    init_platform();
+//
+//    xil_printf("\n\r==========================================\n\r");
+//    xil_printf("   AXU5EV-P Hardware Accelerator Test     \n\r");
+//    xil_printf("==========================================\n\r");
+//
+//    // Test values to write into PL registers
+//    u32 data_a = 0x12345678;
+//    u32 data_b = 0xABCDEF01;
+//
+//    xil_printf("[PS -> PL] Writing 0x%08X to reg0...\n\r", data_a);
+//    Xil_Out32(ACCEL_BASEADDR + REG0_OFFSET, data_a);
+//
+//    xil_printf("[PS -> PL] Writing 0x%08X to reg1...\n\r", data_b);
+//    Xil_Out32(ACCEL_BASEADDR + REG1_OFFSET, data_b);
+//
+//    // Read back to confirm communication
+//    u32 read_reg0 = Xil_In32(ACCEL_BASEADDR + REG0_OFFSET);
+//    u32 read_reg1 = Xil_In32(ACCEL_BASEADDR + REG1_OFFSET);
+//    u32 read_reg2 = Xil_In32(ACCEL_BASEADDR + REG2_OFFSET);
+//    u32 read_reg3 = Xil_In32(ACCEL_BASEADDR + REG3_OFFSET);
+//
+//    xil_printf("[PL -> PS] Readback reg0: 0x%08X\n\r", read_reg0);
+//    xil_printf("[PL -> PS] Readback reg1: 0x%08X\n\r", read_reg1);
+//    xil_printf("[PL -> PS] Readback reg2: 0x%08X\n\r", read_reg2);
+//    xil_printf("[PL -> PS] Readback reg3: 0x%08X\n\r", read_reg3);
+//
+//    if (read_reg0 == data_a && read_reg1 == data_b) {
+//        xil_printf("\n\rSUCCESS: AXI4-Lite bus communication verified!\n\r");
+//    } else {
+//        xil_printf("\n\rERROR: Readback values do not match written data!\n\r");
+//    }
+//
+//    cleanup_platform();
+//    return 0;
+//}
+
+
+
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include "xparameters.h"
+
+// Set base address from xparameters.h (or fallback if undefined)
+#ifndef ACCEL_BASEADDR
+#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_S_AXI_BASEADDR
+#endif
+
+#define REG0_CTRL_OFFSET    0x00  // Multiplier Scalar Y [15:0]
+#define REG2_STATUS_OFFSET  0x08  // Accelerator FSM Status Readback
+
+int main()
+{
+    init_platform();
+
+    xil_printf("\r\n===========================================\r\n");
+    xil_printf("   PS-PL Hardware MAC Accelerator Driver   \r\n");
+    xil_printf("===========================================\r\n\r\n");
+
+    // 1. Configure the MAC Multiplier Scalar Y
+    u32 scalar_y = 5; // Example scalar factor: multiplies streamed bytes by 5
+    xil_printf("[PS] Setting MAC Multiplier Scalar Y = %d...\r\n", scalar_y);
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+
+    // Verify write
+    u32 read_y = Xil_In32(ACCEL_BASEADDR + REG0_CTRL_OFFSET) & 0xFFFF;
+    xil_printf("[PS] Verified REG0 Multiplier Y = %d\r\n\r\n", read_y);
+
+    // 2. Read Initial Status
+    u32 status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+    xil_printf("[PS] Initial Accelerator State: ");
+    if (status == 0)      xil_printf("IDLE\r\n");
+    else if (status == 1) xil_printf("PROCESSING\r\n");
+    else                  xil_printf("DONE\r\n");
+
+    xil_printf("[PS] Ready! Stream bytes via UART terminal to run MAC hardware pipeline.\r\n\r\n");
+
+    // 3. Live FSM Status Monitoring Loop
+    u32 last_status = status;
+    while(1) {
+        status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+
+        // Print live updates whenever the PL accelerator state changes
+        if (status != last_status) {
+            if (status == 0) {
+                xil_printf("[PL Event] State -> IDLE (Ready for next byte)\r\n");
+            } else if (status == 1) {
+                xil_printf("[PL Event] State -> PROCESSING (Data in MAC pipeline)\r\n");
+            } else if (status == 2) {
+                xil_printf("[PL Event] State -> DONE (Result computed & transmitted)\r\n");
+            }
+            last_status = status;
+        }
+    }
+
+    cleanup_platform();
+    return 0;
+}

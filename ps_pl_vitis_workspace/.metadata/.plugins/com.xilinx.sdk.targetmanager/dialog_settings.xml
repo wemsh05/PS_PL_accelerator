@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item value="_ide/bitstream/ps_pl_system_wrapper.bit" key="axi_ps_side-bitFile"/>
+	<item value="{&quot;cables&quot;:[{&quot;name&quot;:&quot;Digilent JTAG-HS1 210512180081&quot;,&quot;indexContextMap&quot;:{&quot;2&quot;:&quot;jsn-JTAG-HS1-210512180081-04720093-0&quot;,&quot;3&quot;:&quot;jsn-JTAG-HS1-210512180081-5ba00477-0&quot;}}]}" key="devices_info_Local"/>
+	<item value="Local" key="axi_ps_side-target"/>
+	<item value="false" key="axi_ps_side-partial_bit"/>
+	<item value="Auto Detect" key="axi_ps_side-device"/>
+	<item value="" key="axi_ps_side-bmmFile"/>
+	<item value="axi_ps_side" key="programfpga.sdxproject"/>
+	<item value="false" key="axi_ps_side-skip_rev_check"/>
+</section>

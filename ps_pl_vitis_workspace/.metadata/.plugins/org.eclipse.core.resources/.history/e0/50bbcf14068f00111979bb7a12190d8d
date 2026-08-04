@@ -1,0 +1,117 @@
+///******************************************************************************
+//*
+//* Copyright (C) 2009 - 2014 Xilinx, Inc.  All rights reserved.
+//*
+//* Permission is hereby granted, free of charge, to any person obtaining a copy
+//* of this software and associated documentation files (the "Software"), to deal
+//* in the Software without restriction, including without limitation the rights
+//* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//* copies of the Software, and to permit persons to whom the Software is
+//* furnished to do so, subject to the following conditions:
+//*
+//* The above copyright notice and this permission notice shall be included in
+//* all copies or substantial portions of the Software.
+//*
+//* Use of the Software is limited solely to applications:
+//* (a) running on a Xilinx device, or
+//* (b) that interact with a Xilinx device through a bus or interconnect.
+//*
+//* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//* XILINX  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+//* WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+//* OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//* SOFTWARE.
+//*
+//* Except as contained in this notice, the name of the Xilinx shall not be used
+//* in advertising or otherwise to promote the sale, use or other dealings in
+//* this Software without prior written authorization from Xilinx.
+//*
+//******************************************************************************/
+//
+///*
+// * helloworld.c: simple test application
+// *
+// * This application configures UART 16550 to baud rate 9600.
+// * PS7 UART (Zynq) is not initialized by this application, since
+// * bootrom/bsp configures it to baud rate 115200
+// *
+// * ------------------------------------------------
+// * | UART TYPE   BAUD RATE                        |
+// * ------------------------------------------------
+// *   uartns550   9600
+// *   uartlite    Configurable only in HW design
+// *   ps7_uart    115200 (configured by bootrom/bsp)
+// */
+//
+//#include <stdio.h>
+//#include "platform.h"
+//#include "xil_printf.h"
+//
+//
+//int main()
+//{
+//    init_platform();
+//
+//    print("Hello World\n\r");
+//    print("Successfully ran Hello World application");
+//    cleanup_platform();
+//    return 0;
+//}
+
+
+
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "xil_io.h"          // Hardware I/O functions: Xil_Out32, Xil_In32
+#include "xparameters.h"    // Contains XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+
+// Hardware Base Address from xparameters.h
+#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+
+// Register Offsets
+#define REG0_OFFSET 0x00
+#define REG1_OFFSET 0x04
+#define REG2_OFFSET 0x08
+#define REG3_OFFSET 0x0C
+
+int main()
+{
+    init_platform();
+
+    xil_printf("\n\r==========================================\n\r");
+    xil_printf("   AXU5EV-P Hardware Accelerator Test     \n\r");
+    xil_printf("==========================================\n\r");
+
+    // Test values to write into PL registers
+    u32 data_a = 0x12345678;
+    u32 data_b = 0xABCDEF01;
+
+    xil_printf("[PS -> PL] Writing 0x%08X to reg0...\n\r", data_a);
+    Xil_Out32(ACCEL_BASEADDR + REG0_OFFSET, data_a);
+
+    xil_printf("[PS -> PL] Writing 0x%08X to reg1...\n\r", data_b);
+    Xil_Out32(ACCEL_BASEADDR + REG1_OFFSET, data_b);
+
+    // Read back to confirm communication
+    u32 read_reg0 = Xil_In32(ACCEL_BASEADDR + REG0_OFFSET);
+    u32 read_reg1 = Xil_In32(ACCEL_BASEADDR + REG1_OFFSET);
+    u32 read_reg2 = Xil_In32(ACCEL_BASEADDR + REG2_OFFSET);
+    u32 read_reg3 = Xil_In32(ACCEL_BASEADDR + REG3_OFFSET);
+
+    xil_printf("[PL -> PS] Readback reg0: 0x%08X\n\r", read_reg0);
+    xil_printf("[PL -> PS] Readback reg1: 0x%08X\n\r", read_reg1);
+    xil_printf("[PL -> PS] Readback reg2: 0x%08X\n\r", read_reg2);
+    xil_printf("[PL -> PS] Readback reg3: 0x%08X\n\r", read_reg3);
+
+    if (read_reg0 == data_a && read_reg1 == data_b) {
+        xil_printf("\n\rSUCCESS: AXI4-Lite bus communication verified!\n\r");
+    } else {
+        xil_printf("\n\rERROR: Readback values do not match written data!\n\r");
+    }
+
+    cleanup_platform();
+    return 0;
+}

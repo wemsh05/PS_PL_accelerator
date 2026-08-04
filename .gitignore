@@ -1,0 +1,23 @@
+# Vivado temporary and build directories
+.Xil/
+*.jou
+*.log
+*.pb
+*.str
+*.dir
+*.os
+*.zip
+
+# Run results and hardware exports
+*.runs/
+*.hw/
+*.ip_user_files/
+*.gen/
+*.sim/
+*.cache/
+
+# Ignore Python junk
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
