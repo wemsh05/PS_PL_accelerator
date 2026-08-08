@@ -15,7 +15,14 @@ src/helloworld.o src/helloworld.o: ../src/helloworld.c ../src/platform.h \
  C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xparameters.h \
  C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xuartps_hw.h \
  C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_io.h \
- C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xtime_l.h
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xtime_l.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_bdring.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_bd.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_hw.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xdebug.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_cache.h \
+ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_cache.h
 
 ../src/platform.h:
 
@@ -52,3 +59,17 @@ C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_sys
 C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_io.h:
 
 C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xtime_l.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_bdring.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_bd.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xaxidma_hw.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xdebug.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_cache.h:
+
+C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/domain_psu_cortexa53_0/bspinclude/include/xil_cache.h:

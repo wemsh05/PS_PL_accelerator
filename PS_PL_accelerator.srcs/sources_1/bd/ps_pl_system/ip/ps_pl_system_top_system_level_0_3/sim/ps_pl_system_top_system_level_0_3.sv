@@ -48,7 +48,7 @@
 
 
 // IP VLNV: xilinx.com:user:top_system_level:1.0
-// IP Revision: 5
+// IP Revision: 12
 
 `timescale 1ns/1ps
 
@@ -78,10 +78,24 @@ module ps_pl_system_top_system_level_0_3 (
   s_axi_rdata,
   s_axi_rresp,
   s_axi_rvalid,
-  s_axi_rready
+  s_axi_rready,
+  s_axis_tdata,
+  s_axis_tkeep,
+  s_axis_tvalid,
+  s_axis_tready,
+  s_axis_tlast,
+  m_axis_tdata,
+  m_axis_tkeep,
+  m_axis_tvalid,
+  m_axis_tready,
+  m_axis_tlast
 );
 
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME clk_100MHz, ASSOCIATED_BUSIF s_axis:m_axis, FREQ_HZ 99999001, FREQ_TOLERANCE_HZ 0, PHASE 0.000, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk_100MHz CLK" *)
 input wire clk_100MHz;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME clk_200MHz, FREQ_HZ 200000000, FREQ_TOLERANCE_HZ 0, PHASE 0.000, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk_200MHz CLK" *)
 input wire clk_200MHz;
 (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME sys_rst_n, POLARITY ACTIVE_LOW, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 sys_rst_n RST" *)
@@ -130,6 +144,28 @@ output wire s_axi_rvalid;
 ITS_PER_BYTE 0, INSERT_VIP 0" *)
 (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 s_axi RREADY" *)
 input wire s_axi_rready;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TDATA" *)
+input wire [31 : 0] s_axis_tdata;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TKEEP" *)
+input wire [3 : 0] s_axis_tkeep;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TVALID" *)
+input wire s_axis_tvalid;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TREADY" *)
+output wire s_axis_tready;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME s_axis, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 99999001, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TLAST" *)
+input wire s_axis_tlast;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis TDATA" *)
+output wire [31 : 0] m_axis_tdata;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis TKEEP" *)
+output wire [3 : 0] m_axis_tkeep;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis TVALID" *)
+output wire m_axis_tvalid;
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis TREADY" *)
+input wire m_axis_tready;
+(* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME m_axis, TDATA_NUM_BYTES 4, TDEST_WIDTH 0, TID_WIDTH 0, TUSER_WIDTH 0, HAS_TREADY 1, HAS_TSTRB 0, HAS_TKEEP 1, HAS_TLAST 1, FREQ_HZ 99999001, PHASE 0.000, LAYERED_METADATA undef, INSERT_VIP 0" *)
+(* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis TLAST" *)
+output wire m_axis_tlast;
 
   top_system_level inst (
     .clk_100MHz(clk_100MHz),
@@ -155,6 +191,16 @@ input wire s_axi_rready;
     .s_axi_rdata(s_axi_rdata),
     .s_axi_rresp(s_axi_rresp),
     .s_axi_rvalid(s_axi_rvalid),
-    .s_axi_rready(s_axi_rready)
+    .s_axi_rready(s_axi_rready),
+    .s_axis_tdata(s_axis_tdata),
+    .s_axis_tkeep(s_axis_tkeep),
+    .s_axis_tvalid(s_axis_tvalid),
+    .s_axis_tready(s_axis_tready),
+    .s_axis_tlast(s_axis_tlast),
+    .m_axis_tdata(m_axis_tdata),
+    .m_axis_tkeep(m_axis_tkeep),
+    .m_axis_tvalid(m_axis_tvalid),
+    .m_axis_tready(m_axis_tready),
+    .m_axis_tlast(m_axis_tlast)
   );
 endmodule

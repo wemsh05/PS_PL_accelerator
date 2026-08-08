@@ -68,7 +68,7 @@ ps_pl_system_zynq_ultra_ps_e_0_0_sc::ps_pl_system_zynq_ultra_ps_e_0_0_sc(const s
     model_param_props.addLong("C_MAXIGP2_DATA_WIDTH", "32");
     model_param_props.addLong("C_SAXIGP0_DATA_WIDTH", "128");
     model_param_props.addLong("C_SAXIGP1_DATA_WIDTH", "128");
-    model_param_props.addLong("C_SAXIGP2_DATA_WIDTH", "128");
+    model_param_props.addLong("C_SAXIGP2_DATA_WIDTH", "32");
     model_param_props.addLong("C_SAXIGP3_DATA_WIDTH", "128");
     model_param_props.addLong("C_SAXIGP4_DATA_WIDTH", "128");
     model_param_props.addLong("C_SAXIGP5_DATA_WIDTH", "128");
@@ -104,6 +104,8 @@ ps_pl_system_zynq_ultra_ps_e_0_0_sc::ps_pl_system_zynq_ultra_ps_e_0_0_sc(const s
   // initialize sockets
   M_AXI_HPM0_LPD_rd_socket = mp_impl->M_AXI_HPM0_LPD_rd_socket;
   M_AXI_HPM0_LPD_wr_socket = mp_impl->M_AXI_HPM0_LPD_wr_socket;
+  S_AXI_HP0_FPD_rd_socket = mp_impl->S_AXI_HP0_FPD_rd_socket;
+  S_AXI_HP0_FPD_wr_socket = mp_impl->S_AXI_HP0_FPD_wr_socket;
 }
 
 ps_pl_system_zynq_ultra_ps_e_0_0_sc::~ps_pl_system_zynq_ultra_ps_e_0_0_sc()

@@ -13,9 +13,9 @@ set mode [expr [mrd -value 0xFF5E0200] & 0xf]
 targets -set -nocase -filter {name =~ "*A53*#0"}
 rst -processor
 dow C:/PS_PL_accelerator/ps_pl_vitis_workspace/ps_pl_system_wrapper/export/ps_pl_system_wrapper/sw/ps_pl_system_wrapper/boot/fsbl.elf
-set bp_34_29_fsbl_bp [bpadd -addr &XFsbl_Exit]
+set bp_41_53_fsbl_bp [bpadd -addr &XFsbl_Exit]
 con -block -timeout 60
-bpremove $bp_34_29_fsbl_bp
+bpremove $bp_41_53_fsbl_bp
 targets -set -nocase -filter {name =~ "*A53*#0"}
 rst -processor
 dow C:/PS_PL_accelerator/ps_pl_vitis_workspace/axi_ps_side/Debug/axi_ps_side.elf
