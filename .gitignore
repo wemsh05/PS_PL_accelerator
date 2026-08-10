@@ -21,3 +21,25 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# --------------------------------------------------
+# Vitis / Eclipse Workspace Junk & Binaries
+# --------------------------------------------------
+# Workspace metadata & analytics
+.metadata/
+.analytics/
+.sdk/
+.Xil/
+
+# Binaries and compiled output
+*.elf
+*.elf.size
+*.o
+*.bin
+*.BIN
+*.snap
+*.tree
+
+# Build output directories
+**/Debug/
+**/Release/
