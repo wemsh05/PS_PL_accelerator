@@ -1,0 +1,646 @@
+//
+//
+//
+//#include <stdio.h>
+//#include "platform.h"
+//#include "xil_printf.h"
+//#include "xil_io.h"
+//#include "xparameters.h"
+//#include "xuartps_hw.h"
+//#include "xtime_l.h"     // High-resolution hardware timer library
+//
+//#ifndef ACCEL_BASEADDR
+//#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+//#endif
+//
+//// AXI Register Offsets
+//#define REG0_CTRL_OFFSET    0x00  // Multiplier Y
+//#define REG1_DATA_OFFSET    0x04  // Input Data X
+//#define REG2_STATUS_OFFSET  0x08  // FSM Status (0=IDLE, 1=PROC, 2=DONE)
+//#define REG3_RESULT_OFFSET  0x0C  // Computed Result / Running Accumulator Total
+//
+//#define BENCHMARK_VECTOR_SIZE 1000
+//
+//// Read multi-digit integers from UART terminal
+//u32 get_int_from_uart() {
+//    u32 num = 0;
+//    while (1) {
+//        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+//            u8 c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+//
+//            if (c == '\r' || c == '\n') {
+//                xil_printf("\r\n");
+//                break;
+//            }
+//            if (c >= '0' && c <= '9') {
+//                xil_printf("%c", c);
+//                num = num * 10 + (c - '0');
+//            }
+//        }
+//    }
+//    return num;
+//}
+//
+//// Execute single-shot hardware MAC calculation
+//void run_mac_calculation(u32 input_x, u32 current_scalar_y) {
+//    u32 prev_total = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+//    u16 x_wrapped = (u16)(input_x & 0xFFFF);
+//
+//    if (input_x > 65535) {
+//        xil_printf("\r\n[16-BIT WARNING] Input X (%u) exceeds hardware limit (65,535)!\r\n", input_x);
+//        xil_printf("                Wrapped to 16 bits -> X_hw = %u\r\n", x_wrapped);
+//    }
+//
+//    // Trigger PL
+//    Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, input_x);
+//
+//    // Poll status register
+//    u32 status = 0;
+//    int timeout = 0;
+//    const int MAX_TIMEOUT = 5000000;
+//
+//    do {
+//        status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+//        timeout++;
+//        if (timeout > MAX_TIMEOUT) {
+//            xil_printf("\r\n[FATAL ERROR] Hardware Timeout! Status = %d\r\n\r\n", status);
+//            return;
+//        }
+//    } while (status != 2);
+//
+//    u32 new_total = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+//    xil_printf("[PL ACCUMULATOR] Previous (%u) + (%u * %u) = New Total: %u\r\n\r\n",
+//               prev_total, x_wrapped, current_scalar_y, new_total);
+//}
+//
+//// Automated Vector Dot-Product Benchmark (Software vs PL Hardware)
+//void run_vector_benchmark(u32 current_scalar_y) {
+//    static u16 test_vector[BENCHMARK_VECTOR_SIZE];
+//    XTime t_sw_start, t_sw_end;
+//    XTime t_hw_start, t_hw_end;
+//
+//    xil_printf("\r\n===================================================\r\n");
+//    xil_printf("  STARTING AUTOMATED VECTOR BENCHMARK (N = %d)\r\n", BENCHMARK_VECTOR_SIZE);
+//    xil_printf("===================================================\r\n");
+//
+//    // 1. Populate test vector with test data (0 to 49 pattern)
+//    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+//        test_vector[i] = (u16)((i % 50) + 1);
+//    }
+//
+//    // 2. SOFTWARE EXECUTION (ARM Cortex CPU)
+//    XTime_GetTime(&t_sw_start);
+//    u32 sw_sum = 0;
+//    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+//        sw_sum += (u32)test_vector[i] * current_scalar_y;
+//    }
+//    XTime_GetTime(&t_sw_end);
+//
+//    // 3. HARDWARE ACCELERATED EXECUTION (FPGA PL)
+//    u32 initial_hw_val = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+//
+//    XTime_GetTime(&t_hw_start);
+//    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+//        // Trigger calculation
+//        Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, (u32)test_vector[i]);
+//
+//        // Wait for FSM DONE state (status == 2)
+//        while ((Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03) != 2);
+//    }
+//    XTime_GetTime(&t_hw_end);
+//
+//    u32 final_hw_val = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+//    u32 hw_sum_delta = final_hw_val - initial_hw_val; // Delta accumulated during run
+//
+//    // 4. Calculate Execution Times (Microseconds & Nanoseconds)
+//    u64 sw_cycles = t_sw_end - t_sw_start;
+//    u64 hw_cycles = t_hw_end - t_hw_start;
+//
+//    u64 sw_ns = (sw_cycles * 1000000000ULL) / COUNTS_PER_SECOND;
+//    u64 hw_ns = (hw_cycles * 1000000000ULL) / COUNTS_PER_SECOND;
+//
+//    // 5. Output Results Report
+//    xil_printf(" Vector Size         : %d elements\r\n", BENCHMARK_VECTOR_SIZE);
+//    xil_printf(" Multiplier Scalar Y : %d\r\n", current_scalar_y);
+//    xil_printf(" -------------------------------------------------\r\n");
+//    xil_printf(" Software SW Total   : %u\r\n", sw_sum);
+//    xil_printf(" Hardware PL Delta   : %u\r\n", hw_sum_delta);
+//
+//    if (sw_sum == hw_sum_delta) {
+//        xil_printf(" Data Verification   : [PASSED] Match 100%%\r\n");
+//    } else {
+//        xil_printf(" Data Verification   : [FAILED] Mismatch detected!\r\n");
+//    }
+//    xil_printf(" -------------------------------------------------\r\n");
+//    xil_printf(" Software Execution  : %u.%03u us (%u ns)\r\n",
+//               (u32)(sw_ns / 1000), (u32)(sw_ns % 1000), (u32)sw_ns);
+//    xil_printf(" Hardware Execution  : %u.%03u us (%u ns)\r\n",
+//               (u32)(hw_ns / 1000), (u32)(hw_ns % 1000), (u32)hw_ns);
+//    xil_printf("===================================================\r\n\r\n");
+//}
+//
+//void print_menu(u32 current_y) {
+//    xil_printf("\r\n===================================================\r\n");
+//    xil_printf("   PS-PL AXI Hardware MAC Accelerator Interface    \r\n");
+//    xil_printf("===================================================\r\n");
+//    xil_printf(" Current Scalar (Y) : %d\r\n", current_y);
+//    xil_printf(" Hardware Limit     : 16-Bit Input X (0 to 65,535)\r\n");
+//    xil_printf(" -------------------------------------------------\r\n");
+//    xil_printf("  [M] Calculate Single Integer Input (X * Y)\r\n");
+//    xil_printf("  [V] Run Automated Vector Benchmark (N = 1000)\r\n");
+//    xil_printf("  [S] Change Scalar Multiplier (Y)\r\n");
+//    xil_printf("  [H] Reprint Menu\r\n");
+//    xil_printf("  [Q] Exit Application\r\n");
+//    xil_printf("===================================================\r\n\r\n");
+//}
+//
+//int main()
+//{
+//    init_platform();
+//
+//    xil_printf("\r\nEnter initial MAC Scalar Multiplier Y: ");
+//    u32 scalar_y = get_int_from_uart();
+//
+//    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+//    print_menu(scalar_y);
+//
+//    int running = 1;
+//
+//    while(running) {
+//        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+//            u8 key = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+//
+//            if (key == '\r' || key == '\n') continue;
+//
+//            switch (key) {
+//                case 'M':
+//                case 'm':
+//                    xil_printf("\r\nEnter Integer X: ");
+//                    u32 custom_x = get_int_from_uart();
+//                    run_mac_calculation(custom_x, scalar_y);
+//                    break;
+//
+//                case 'V':
+//                case 'v':
+//                    run_vector_benchmark(scalar_y);
+//                    break;
+//
+//                case 'S':
+//                case 's':
+//                    xil_printf("\r\nEnter NEW Scalar Y: ");
+//                    scalar_y = get_int_from_uart();
+//                    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+//                    xil_printf("[CONFIG] Updated Scalar Y = %d\r\n\r\n", scalar_y);
+//                    break;
+//
+//                case 'H':
+//                case 'h':
+//                    print_menu(scalar_y);
+//                    break;
+//
+//                case 'Q':
+//                case 'q':
+//                    xil_printf("\r\nExiting application. Goodbye!\r\n");
+//                    running = 0;
+//                    break;
+//
+//                default:
+//                    xil_printf("[NOTICE] Invalid key '%c'. Press 'H' for options.\r\n", key);
+//                    break;
+//            }
+//        }
+//    }
+//
+//    cleanup_platform();
+//    return 0;
+//}
+
+
+
+
+
+
+
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include "xparameters.h"
+#include "xuartps_hw.h"
+#include "xtime_l.h"       // High-resolution hardware timer library
+#include "xaxidma.h"       // AXI DMA Driver
+#include "xil_cache.h"     // L1/L2 Cache control for DDR transfers
+
+// Accelerator Base Address
+#ifndef ACCEL_BASEADDR
+#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+#endif
+
+// AXI DMA Device ID Definition
+#ifndef DMA_DEV_ID
+#ifdef XPAR_AXIDMA_0_DEVICE_ID
+#define DMA_DEV_ID XPAR_AXIDMA_0_DEVICE_ID
+#else
+#define DMA_DEV_ID XPAR_XAXIDMA_0_DEVICE_ID
+#endif
+#endif
+
+// AXI-Lite Register Offsets
+#define REG0_CTRL_OFFSET    0x00  // Bit 31: Hardware Accumulator Clear | Bits [15:0]: Multiplier Y
+#define REG1_DATA_OFFSET    0x04  // Input Data X
+#define REG2_STATUS_OFFSET  0x08  // FSM Status (0=IDLE, 1=PROC, 2=DONE)
+#define REG3_RESULT_OFFSET  0x0C  // Computed Result / Running Accumulator Total
+
+// Align vector size to 64-byte cache line multiple (1024 words = 4096 bytes)
+#define BENCHMARK_VECTOR_SIZE 1024
+
+// Global DMA Driver Instance
+XAxiDma AxiDma;
+
+// Aligned Memory Buffers in DDR for DMA transfers
+u32 TxBuffer[BENCHMARK_VECTOR_SIZE] __attribute__ ((aligned(64)));
+u32 RxBuffer[BENCHMARK_VECTOR_SIZE] __attribute__ ((aligned(64)));
+
+// ============================================================================
+// [NEW UPDATE 1] Helper Function to Pulse Hardware Accumulator Reset Bit
+// ============================================================================
+void reset_hw_accumulator(u32 current_scalar_y) {
+    // Assert bit 31 (in_clr) while preserving scalar Y in low bits
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, 0x80000000 | (current_scalar_y & 0xFFFF));
+
+    // De-assert bit 31 to allow normal accumulation
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, current_scalar_y & 0xFFFF);
+}
+
+// Initialize AXI DMA Controller
+int init_dma() {
+    XAxiDma_Config *CfgPtr;
+    int Status;
+
+    CfgPtr = XAxiDma_LookupConfig(DMA_DEV_ID);
+    if (!CfgPtr) {
+        xil_printf("[DMA ERROR] No config found for DMA Device ID %d\r\n", DMA_DEV_ID);
+        return XST_FAILURE;
+    }
+
+    xil_printf("[DEBUG] DMA Config Found - Base Address: 0x%08X\r\n", CfgPtr->BaseAddr);
+    xil_printf("[DEBUG] DMA Configured Address Width: %d-bit\r\n", CfgPtr->AddrWidth);
+
+    Status = XAxiDma_CfgInitialize(&AxiDma, CfgPtr);
+    if (Status != XST_SUCCESS) {
+        xil_printf("[DMA ERROR] Initialization failed with status %d\r\n", Status);
+        return XST_FAILURE;
+    }
+
+    if (XAxiDma_HasSg(&AxiDma)) {
+        xil_printf("[DMA ERROR] Configured as Scatter-Gather. Simple mode expected!\r\n");
+        return XST_FAILURE;
+    }
+
+    // Disable Interrupts for simple polling mode
+    XAxiDma_IntrDisable(&AxiDma, XAXIDMA_IRQ_ALL_MASK, XAXIDMA_DMA_TO_DEVICE);
+    XAxiDma_IntrDisable(&AxiDma, XAXIDMA_IRQ_ALL_MASK, XAXIDMA_DEVICE_TO_DMA);
+
+    return XST_SUCCESS;
+}
+
+// Read multi-digit integers from UART terminal
+u32 get_int_from_uart() {
+    u32 num = 0;
+    while (1) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            if (c == '\r' || c == '\n') {
+                xil_printf("\r\n");
+                break;
+            }
+            if (c >= '0' && c <= '9') {
+                xil_printf("%c", c);
+                num = num * 10 + (c - '0');
+            }
+        }
+    }
+    return num;
+}
+
+// Execute single-shot AXI-Lite hardware MAC calculation
+void run_mac_calculation(u32 input_x, u32 current_scalar_y) {
+    u32 prev_total = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+    u16 x_wrapped = (u16)(input_x & 0xFFFF);
+
+    if (input_x > 65535) {
+        xil_printf("\r\n[16-BIT WARNING] Input X (%u) exceeds hardware limit (65,535)!\r\n", input_x);
+        xil_printf("                 Wrapped to 16 bits -> X_hw = %u\r\n", x_wrapped);
+    }
+
+    // Trigger PL via MMIO
+    Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, input_x);
+
+    // Poll status register
+    u32 status = 0;
+    int timeout = 0;
+    const int MAX_TIMEOUT = 5000000;
+
+    do {
+        status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+        timeout++;
+        if (timeout > MAX_TIMEOUT) {
+            xil_printf("\r\n[FATAL ERROR] Hardware Timeout! Status = %d\r\n\r\n", status);
+            return;
+        }
+    } while (status != 2);
+
+    u32 new_total = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+    xil_printf("[PL ACCUMULATOR] Previous (%u) + (%u * %u) = New Total: %u\r\n\r\n",
+               prev_total, x_wrapped, current_scalar_y, new_total);
+}
+
+// Automated Vector Benchmark via AXI-Lite MMIO Polling
+void run_vector_benchmark(u32 current_scalar_y) {
+    static u16 test_vector[BENCHMARK_VECTOR_SIZE];
+    XTime t_sw_start, t_sw_end;
+    XTime t_hw_start, t_hw_end;
+
+    xil_printf("\r\n===================================================\r\n");
+    xil_printf("  STARTING AXI-LITE MMIO BENCHMARK (N = %d)\r\n", BENCHMARK_VECTOR_SIZE);
+    xil_printf("===================================================\r\n");
+
+    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+        test_vector[i] = (u16)((i % 50) + 1);
+    }
+
+    // ============================================================================
+    // [NEW UPDATE 2] Flush HW Accumulator before MMIO benchmark runs
+    // ============================================================================
+    reset_hw_accumulator(current_scalar_y);
+
+    // Capture the accumulator state BEFORE the benchmark runs
+    u32 initial_hw_val = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+
+    // 1. SOFTWARE EXECUTION (ARM Cortex CPU) - Simulating the exact hardware accumulator
+    XTime_GetTime(&t_sw_start);
+    u32 expected_hw_accum = initial_hw_val;
+    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+        expected_hw_accum += (u32)test_vector[i] * current_scalar_y;
+    }
+    XTime_GetTime(&t_sw_end);
+
+    // 2. HARDWARE AXI-LITE MMIO LOOP
+    XTime_GetTime(&t_hw_start);
+    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+
+        // Wait for FSM to be strictly IDLE (0) before triggering
+        while ((Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03) != 0);
+
+        Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, (u32)test_vector[i]);
+        while ((Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03) != 2);
+    }
+    XTime_GetTime(&t_hw_end);
+
+    u32 final_hw_val = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+
+    u64 sw_cycles = t_sw_end - t_sw_start;
+    u64 hw_cycles = t_hw_end - t_hw_start;
+
+    u64 sw_ns = (sw_cycles * 1000000000ULL) / COUNTS_PER_SECOND;
+    u64 hw_ns = (hw_cycles * 1000000000ULL) / COUNTS_PER_SECOND;
+
+    xil_printf(" Vector Size         : %d elements\r\n", BENCHMARK_VECTOR_SIZE);
+    xil_printf(" Multiplier Scalar Y : %d\r\n", current_scalar_y);
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf(" Starting HW Acc Val : %u\r\n", initial_hw_val);
+    xil_printf(" Expected Final Accum: %u\r\n", expected_hw_accum);
+    xil_printf(" Actual Final Accum  : %u\r\n", final_hw_val);
+
+    if (expected_hw_accum == final_hw_val) {
+        xil_printf(" Data Verification   : [PASSED] Match 100%%\r\n");
+    } else if (final_hw_val - initial_hw_val == (expected_hw_accum - initial_hw_val) * 2) {
+        xil_printf(" Data Verification   : [WARNING] Exact double accumulation detected! (FSM bouncing)\r\n");
+    } else {
+        xil_printf(" Data Verification   : [FAILED] Mismatch detected!\r\n");
+    }
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf(" Software Execution  : %u.%03u us (%u ns)\r\n",
+               (u32)(sw_ns / 1000), (u32)(sw_ns % 1000), (u32)sw_ns);
+    xil_printf(" AXI-Lite MMIO Time  : %u.%03u us (%u ns)\r\n",
+               (u32)(hw_ns / 1000), (u32)(hw_ns % 1000), (u32)hw_ns);
+    xil_printf("===================================================\r\n\r\n");
+}
+
+// Automated AXI DMA Stream Hardware Benchmark
+void run_dma_stream_benchmark(u32 current_scalar_y) {
+    XTime t_dma_start, t_dma_end;
+    u32 transfer_bytes = BENCHMARK_VECTOR_SIZE * sizeof(u32);
+
+    xil_printf("\r\n===================================================\r\n");
+    xil_printf("  STARTING AXI DMA STREAM BENCHMARK (N = %d)\r\n", BENCHMARK_VECTOR_SIZE);
+    xil_printf("===================================================\r\n");
+
+    // ============================================================================
+    // [NEW UPDATE 3] Clear Hardware MAC Accumulator prior to DMA benchmark launch
+    // ============================================================================
+    reset_hw_accumulator(current_scalar_y);
+
+    // 1. Soft-Reset DMA engine to clear prior states
+    XAxiDma_Reset(&AxiDma);
+    int reset_timeout = 10000;
+    while (!XAxiDma_ResetIsDone(&AxiDma) && reset_timeout > 0) {
+        reset_timeout--;
+    }
+    if (reset_timeout == 0) {
+        xil_printf("[DMA ERROR] DMA Engine Failed to Reset!\r\n");
+        return;
+    }
+
+    // Re-disable interrupts after reset
+    XAxiDma_IntrDisable(&AxiDma, XAXIDMA_IRQ_ALL_MASK, XAXIDMA_DMA_TO_DEVICE);
+    XAxiDma_IntrDisable(&AxiDma, XAXIDMA_IRQ_ALL_MASK, XAXIDMA_DEVICE_TO_DMA);
+
+    // 2. Validate Buffer Address Space
+    UINTPTR tx_addr = (UINTPTR)TxBuffer;
+    UINTPTR rx_addr = (UINTPTR)RxBuffer;
+
+    xil_printf(" TxBuffer Physical Address : 0x%08X_%08X\r\n",
+               (u32)((u64)tx_addr >> 32), (u32)(tx_addr & 0xFFFFFFFF));
+    xil_printf(" RxBuffer Physical Address : 0x%08X_%08X\r\n",
+               (u32)((u64)rx_addr >> 32), (u32)(rx_addr & 0xFFFFFFFF));
+
+    // 3. Populate Buffers
+    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+        TxBuffer[i] = (u32)((i % 50) + 1);
+        RxBuffer[i] = 0;
+    }
+
+    // 4. Cache Operations prior to transfer initiation
+    Xil_DCacheFlushRange(tx_addr, transfer_bytes);
+    Xil_DCacheInvalidateRange(rx_addr, transfer_bytes);
+
+    // Capture hardware accumulator state prior to DMA launch (should now be 0)
+    u32 pre_dma_accum = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+
+    XTime_GetTime(&t_dma_start);
+
+    // 5. Initiate Receive (S2MM) Channel FIRST
+    int Status = XAxiDma_SimpleTransfer(&AxiDma, rx_addr, transfer_bytes, XAXIDMA_DEVICE_TO_DMA);
+    if (Status != XST_SUCCESS) {
+        xil_printf("[DMA ERROR] S2MM Transfer Failed with Status: %d\r\n", Status);
+        return;
+    }
+
+    // 6. Initiate Transmit (MM2S) Channel SECOND
+    Status = XAxiDma_SimpleTransfer(&AxiDma, tx_addr, transfer_bytes, XAXIDMA_DMA_TO_DEVICE);
+    if (Status != XST_SUCCESS) {
+        xil_printf("[DMA ERROR] MM2S Transfer Failed with Status: %d\r\n", Status);
+        return;
+    }
+
+    // 7. Poll for Completion with Timeout
+    int timeout = 50000000;
+    while ((XAxiDma_Busy(&AxiDma, XAXIDMA_DMA_TO_DEVICE) ||
+            XAxiDma_Busy(&AxiDma, XAXIDMA_DEVICE_TO_DMA)) && timeout > 0) {
+        timeout--;
+    }
+
+    if (timeout == 0) {
+        xil_printf("\r\n[DMA HANG DETECTED] Timed out waiting for PL AXI-Stream hardware!\r\n");
+        XAxiDma_Reset(&AxiDma);
+        while (!XAxiDma_ResetIsDone(&AxiDma));
+        return;
+    }
+
+    XTime_GetTime(&t_dma_end);
+
+    // 8. Invalidate receive buffer post-transfer
+    Xil_DCacheInvalidateRange(rx_addr, transfer_bytes);
+
+    u64 dma_cycles = t_dma_end - t_dma_start;
+    u64 dma_ns = (dma_cycles * 1000000000ULL) / COUNTS_PER_SECOND;
+
+    // 9. Verification Loop: Check continuous accumulation
+    int errors = 0;
+    u32 expected_running_sum = pre_dma_accum;
+
+    for (int i = 0; i < BENCHMARK_VECTOR_SIZE; i++) {
+        u32 one_to_one_val = TxBuffer[i] * current_scalar_y;
+        expected_running_sum += one_to_one_val;
+
+        if (RxBuffer[i] != expected_running_sum) {
+            errors++;
+        }
+    }
+
+    xil_printf(" Buffer Size Transferred : %d Bytes (%d Words)\r\n", transfer_bytes, BENCHMARK_VECTOR_SIZE);
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf(" Pre-DMA HW Accumulator  : %u\r\n", pre_dma_accum);
+    xil_printf(" Sample Input [0]        : %u\r\n", TxBuffer[0]);
+    xil_printf(" Exp. 1-to-1 Match [0]   : %u\r\n", TxBuffer[0] * current_scalar_y);
+    xil_printf(" Sample Stream Output [0]: %u (Expected Accum: %u)\r\n", RxBuffer[0], pre_dma_accum + (TxBuffer[0] * current_scalar_y));
+    xil_printf(" -------------------------------------------------\r\n");
+
+    if (errors == 0) {
+        xil_printf(" Data Verification       : [PASSED] Accumulation Match 100%%\r\n");
+    } else {
+        xil_printf(" Data Verification       : [FAILED] %d mismatches found!\r\n", errors);
+    }
+
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf(" AXI DMA Stream Time     : %u.%03u us (%u ns)\r\n",
+               (u32)(dma_ns / 1000), (u32)(dma_ns % 1000), (u32)dma_ns);
+    xil_printf("===================================================\r\n\r\n");
+}
+
+void print_menu(u32 current_y) {
+    xil_printf("\r\n===================================================\r\n");
+    xil_printf("    PS-PL AXI Hardware MAC Accelerator Interface    \r\n");
+    xil_printf("===================================================\r\n");
+    xil_printf(" Current Scalar (Y) : %d\r\n", current_y);
+    xil_printf(" Hardware Limit     : 16-Bit Input X (0 to 65,535)\r\n");
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf("  [M] Calculate Single Integer Input (AXI-Lite)\r\n");
+    xil_printf("  [V] Run AXI-Lite MMIO Loop Benchmark (N = 1024)\r\n");
+    xil_printf("  [D] Run AXI DMA Stream Hardware Benchmark (N = 1024)\r\n");
+    xil_printf("  [S] Change Scalar Multiplier (Y)\r\n");
+    xil_printf("  [H] Reprint Menu\r\n");
+    xil_printf("  [Q] Exit Application\r\n");
+    xil_printf("===================================================\r\n\r\n");
+}
+
+int main()
+{
+    init_platform();
+
+    xil_printf("\r\n===================================================\r\n");
+    xil_printf("[SYSTEM HARDWARE ADDRESS MAP]\r\n");
+    xil_printf(" Accelerator Base Address : 0x%08X\r\n", ACCEL_BASEADDR);
+    xil_printf("===================================================\r\n");
+
+    xil_printf("\r\nInitializing AXI DMA Engine...\r\n");
+    if (init_dma() == XST_SUCCESS) {
+        xil_printf("[SYSTEM] AXI DMA Engine Initialized Successfully!\r\n");
+        xil_printf("[SYSTEM] DMA Active Base Address: 0x%08X\r\n", AxiDma.RegBase);
+    } else {
+        xil_printf("[SYSTEM ERROR] AXI DMA Initialization Failed!\r\n");
+    }
+
+    xil_printf("\r\nEnter initial MAC Scalar Multiplier Y: ");
+    u32 scalar_y = get_int_from_uart();
+
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+    print_menu(scalar_y);
+
+    int running = 1;
+
+    while(running) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 key = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            if (key == '\r' || key == '\n') continue;
+
+            switch (key) {
+                case 'M':
+                case 'm':
+                    xil_printf("\r\nEnter Integer X: ");
+                    u32 custom_x = get_int_from_uart();
+                    run_mac_calculation(custom_x, scalar_y);
+                    break;
+
+                case 'V':
+                case 'v':
+                    run_vector_benchmark(scalar_y);
+                    break;
+
+                case 'D':
+                case 'd':
+                    run_dma_stream_benchmark(scalar_y);
+                    break;
+
+                case 'S':
+                case 's':
+                    xil_printf("\r\nEnter NEW Scalar Y: ");
+                    scalar_y = get_int_from_uart();
+                    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+                    xil_printf("[CONFIG] Updated Scalar Y = %d\r\n\r\n", scalar_y);
+                    break;
+
+                case 'H':
+                case 'h':
+                    print_menu(scalar_y);
+                    break;
+
+                case 'Q':
+                case 'q':
+                    xil_printf("\r\nExiting application. Goodbye!\r\n");
+                    running = 0;
+                    break;
+
+                default:
+                    xil_printf("[NOTICE] Invalid key '%c'. Press 'H' for options.\r\n", key);
+                    break;
+            }
+        }
+    }
+
+    cleanup_platform();
+    return 0;
+}

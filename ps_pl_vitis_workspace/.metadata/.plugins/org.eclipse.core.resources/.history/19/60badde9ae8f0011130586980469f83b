@@ -1,0 +1,263 @@
+//
+//#include <stdio.h>
+//#include "platform.h"
+//#include "xil_printf.h"
+//#include "xil_io.h"
+//#include "xparameters.h"
+//#include "xuartps_hw.h"
+//
+//// Base Address definition from Vivado xparameters
+//#ifndef ACCEL_BASEADDR
+//#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+//#endif
+//
+//// AXI Register Map Offsets
+//#define REG0_CTRL_OFFSET    0x00  // Multiplier Y
+//#define REG1_DATA_OFFSET    0x04  // Input Data X
+//#define REG2_STATUS_OFFSET  0x08  // FSM Status (0=IDLE, 1=PROC, 2=DONE)
+//#define REG3_RESULT_OFFSET  0x0C  // Computed Result
+//
+//// Helper function to read a multi-digit integer from PuTTY
+//u32 get_int_from_uart() {
+//    u32 num = 0;
+//    while (1) {
+//        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+//            u8 c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+//
+//            // Finish reading when user hits Enter
+//            if (c == '\r' || c == '\n') {
+//                xil_printf("\r\n");
+//                break;
+//            }
+//            // Parse digits 0-9 and echo back to terminal
+//            if (c >= '0' && c <= '9') {
+//                xil_printf("%c", c);
+//                num = num * 10 + (c - '0');
+//            }
+//        }
+//    }
+//    return num;
+//}
+//
+//int main()
+//{
+//    init_platform();
+//
+//    xil_printf("\r\n===========================================\r\n");
+//    xil_printf("   PS-PL AXI Hardware MAC Accelerator      \r\n");
+//    xil_printf("===========================================\r\n\r\n");
+//
+//    // 1. Prompt user for initial MAC Scalar Multiplier Y
+//    xil_printf("Enter desired MAC Scalar Multiplier Y (e.g. 2, 5, 10, 100) and press Enter: ");
+//    u32 scalar_y = get_int_from_uart();
+//
+//    // 2. Write scalar value to PL hardware over AXI (REG0)
+//    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+//    xil_printf("[PS -> PL] Configured MAC Multiplier Scalar Y = %d\r\n", scalar_y);
+//    xil_printf("[PS] Type any key to calculate (ASCII * %d), or press 'S' to change scalar:\r\n\r\n", scalar_y);
+//
+//    while(1) {
+//        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+//            u8 key = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+//
+//            if (key == '\r' || key == '\n') continue;
+//
+//            // Optional: Press 'S' or 's' to re-configure the scalar on the fly
+//            if (key == 'S' || key == 's') {
+//                xil_printf("\r\n[CONFIG] Enter NEW MAC Scalar Multiplier Y and press Enter: ");
+//                scalar_y = get_int_from_uart();
+//                Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+//                xil_printf("[PS -> PL] Updated MAC Multiplier Scalar Y = %d\r\n\r\n", scalar_y);
+//                continue;
+//            }
+//
+//            xil_printf("-------------------------------------------\r\n");
+//            xil_printf("[PS -> PL] Input Key: '%c' (ASCII %d)\r\n", key, key);
+//
+//            // Send byte to PL hardware accelerator over AXI (Trigger calculation)
+//            Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, (u32)key);
+//
+//            // -----------------------------------------------------------------
+//            // NON-BLOCKING POLLING LOOP WITH TIMEOUT SAFETY
+//            // -----------------------------------------------------------------
+//            u32 status = 0;
+//            int timeout = 0;
+//            const int MAX_TIMEOUT = 5000000; // ~0.5 seconds of polling attempts
+//
+//            do {
+//                // Read FSM Status Register from PL
+//                status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+//                timeout++;
+//
+//                if (timeout > MAX_TIMEOUT) {
+//                    xil_printf("\r\n[FATAL ERROR] Hardware Timeout! PL FSM stuck at Status = %d\r\n", status);
+//                    xil_printf("  -> Status 0: FSM missed trigger (Clock CDC issue or AXI strobe mismatch)\r\n");
+//                    xil_printf("  -> Status 1: FSM started but math execution domain hung (Async FIFO / Reset issue)\r\n\r\n");
+//                    break;
+//                }
+//            } while (status != 2); // Wait until status == DONE (2)
+//
+//            // -----------------------------------------------------------------
+//            // READ RESULT
+//            // -----------------------------------------------------------------
+//            if (status == 2) {
+//                u32 result = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+//                xil_printf("[PL -> PS] Result Readback: %d * %d = %d!\r\n", key, scalar_y, result);
+//            }
+//        }
+//    }
+//
+//    cleanup_platform();
+//    return 0;
+//}
+
+
+
+
+
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include "xparameters.h"
+#include "xuartps_hw.h"
+
+// Base Address definition from Vivado xparameters
+#ifndef ACCEL_BASEADDR
+#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+#endif
+
+// AXI Register Map Offsets
+#define REG0_CTRL_OFFSET    0x00  // Multiplier Y
+#define REG1_DATA_OFFSET    0x04  // Input Data X
+#define REG2_STATUS_OFFSET  0x08  // FSM Status (0=IDLE, 1=PROC, 2=DONE)
+#define REG3_RESULT_OFFSET  0x0C  // Computed Result
+
+// Helper function to read a multi-digit integer from PuTTY
+u32 get_int_from_uart() {
+    u32 num = 0;
+    while (1) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            // Finish reading when user hits Enter
+            if (c == '\r' || c == '\n') {
+                xil_printf("\r\n");
+                break;
+            }
+            // Parse digits 0-9 and echo back to terminal
+            if (c >= '0' && c <= '9') {
+                xil_printf("%c", c);
+                num = num * 10 + (c - '0');
+            }
+        }
+    }
+    return num;
+}
+
+// Function to send data to PL and wait for response with timeout
+void run_mac_calculation(u32 input_x, u32 current_scalar_y) {
+    // 1. Send data X to PL hardware over AXI (Triggers execution)
+    Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, input_x);
+
+    // 2. Poll status register with timeout safety
+    u32 status = 0;
+    int timeout = 0;
+    const int MAX_TIMEOUT = 5000000;
+
+    do {
+        status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+        timeout++;
+
+        if (timeout > MAX_TIMEOUT) {
+            xil_printf("\r\n[FATAL ERROR] Hardware Timeout! Status = %d\r\n\r\n", status);
+            return;
+        }
+    } while (status != 2); // Wait for DONE (2)
+
+    // 3. Read back result
+    u32 result = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+    xil_printf("[PL -> PS] Result Readback: %d * %d = %d\r\n\r\n", input_x, current_scalar_y, result);
+}
+
+void print_menu(u32 current_y) {
+    xil_printf("\r\n===================================================\r\n");
+    xil_printf("   PS-PL AXI Hardware MAC Accelerator Terminal     \r\n");
+    xil_printf("===================================================\r\n");
+    xil_printf(" Current Scalar (Y): %d\r\n", current_y);
+    xil_printf(" -------------------------------------------------\r\n");
+    xil_printf("  [S] Change Multiplier Scalar (Y)\r\n");
+    xil_printf("  [M] Enter Custom Integer (X) to Multiply\r\n");
+    xil_printf("  [H] Reprint this Menu\r\n");
+    xil_printf("  [Q] Exit Application\r\n");
+    xil_printf("  Or press any key for instant ASCII key multiplication.\r\n");
+    xil_printf("===================================================\r\n\r\n");
+}
+
+int main()
+{
+    init_platform();
+
+    u32 scalar_y = 1;
+
+    // 1. Initial Setup Prompt
+    xil_printf("\r\nEnter initial MAC Scalar Multiplier Y (e.g., 2, 5, 10, 100) and press Enter: ");
+    scalar_y = get_int_from_uart();
+
+    // 2. Write initial scalar to PL hardware
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+
+    print_menu(scalar_y);
+
+    int running = 1;
+
+    while(running) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 key = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            // Ignore enter/newline keypresses in main loop
+            if (key == '\r' || key == '\n') continue;
+
+            switch (key) {
+                // --- COMMAND: Exit Program ---
+                case 'Q':
+                case 'q':
+                    xil_printf("\r\n[PS] Exiting hardware session. Goodbye!\r\n");
+                    running = 0;
+                    break;
+
+                // --- COMMAND: Change Scalar Multiplier Y ---
+                case 'S':
+                case 's':
+                    xil_printf("\r\n[CONFIG] Enter NEW MAC Scalar Multiplier Y and press Enter: ");
+                    scalar_y = get_int_from_uart();
+                    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+                    xil_printf("[PS -> PL] Updated MAC Multiplier Scalar Y = %d\r\n\r\n", scalar_y);
+                    break;
+
+                // --- COMMAND: Manual Custom Integer Mode ---
+                case 'M':
+                case 'm':
+                    xil_printf("\r\n[INPUT] Enter custom integer X to calculate (X * %d): ", scalar_y);
+                    u32 custom_x = get_int_from_uart();
+                    run_mac_calculation(custom_x, scalar_y);
+                    break;
+
+                // --- COMMAND: Reprint Menu ---
+                case 'H':
+                case 'h':
+                    print_menu(scalar_y);
+                    break;
+
+                // --- DEFAULT: ASCII Key Multiplication ---
+                default:
+                    xil_printf("[PS -> PL] Key: '%c' (ASCII %d)\r\n", key, key);
+                    run_mac_calculation((u32)key, scalar_y);
+                    break;
+            }
+        }
+    }
+
+    cleanup_platform();
+    return 0;
+}

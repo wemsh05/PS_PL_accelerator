@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include "platform.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include "xparameters.h"
+#include "xuartps_hw.h"
+
+#ifndef ACCEL_BASEADDR
+#define ACCEL_BASEADDR XPAR_TOP_SYSTEM_LEVEL_0_BASEADDR
+#endif
+
+#define REG0_CTRL_OFFSET    0x00  // Multiplier Y
+#define REG1_DATA_OFFSET    0x04  // Input Data X
+#define REG2_STATUS_OFFSET  0x08  // FSM Status
+#define REG3_RESULT_OFFSET  0x0C  // Computed Result
+
+// Helper function to read a multi-digit integer from PuTTY
+u32 get_int_from_uart() {
+    u32 num = 0;
+    while (1) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 c = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            // Finish reading when user hits Enter
+            if (c == '\r' || c == '\n') {
+                xil_printf("\r\n");
+                break;
+            }
+            // Parse digits 0-9 and echo back to terminal
+            if (c >= '0' && c <= '9') {
+                xil_printf("%c", c);
+                num = num * 10 + (c - '0');
+            }
+        }
+    }
+    return num;
+}
+
+int main()
+{
+    init_platform();
+
+    xil_printf("\r\n===========================================\r\n");
+    xil_printf("   PS-PL AXI Hardware MAC Accelerator      \r\n");
+    xil_printf("===========================================\r\n\r\n");
+
+    // 1. Ask user to enter their desired MAC scalar
+    xil_printf("Enter desired MAC Scalar Multiplier Y (e.g. 2, 5, 10, 100) and press Enter: ");
+    u32 scalar_y = get_int_from_uart();
+
+    // 2. Write scalar value to PL over AXI (REG0)
+    Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+    xil_printf("[PS -> PL] Configured MAC Multiplier Scalar Y = %d\r\n", scalar_y);
+    xil_printf("[PS] Type any key to calculate (ASCII * %d), or press 'S' to change scalar:\r\n\r\n", scalar_y);
+
+    while(1) {
+        if (XUartPs_IsReceiveData(STDIN_BASEADDRESS)) {
+            u8 key = XUartPs_ReadReg(STDIN_BASEADDRESS, XUARTPS_FIFO_OFFSET);
+
+            if (key == '\r' || key == '\n') continue;
+
+            // Optional: Press 'S' or 's' to re-configure the scalar on the fly!
+            if (key == 'S' || key == 's') {
+                xil_printf("\r\n[CONFIG] Enter NEW MAC Scalar Multiplier Y and press Enter: ");
+                scalar_y = get_int_from_uart();
+                Xil_Out32(ACCEL_BASEADDR + REG0_CTRL_OFFSET, scalar_y);
+                xil_printf("[PS -> PL] Updated MAC Multiplier Scalar Y = %d\r\n\r\n", scalar_y);
+                continue;
+            }
+
+            xil_printf("-------------------------------------------\r\n");
+            xil_printf("[PS -> PL] Input Key: '%c' (ASCII %d)\r\n", key, key);
+
+            // Send byte to PL hardware accelerator over AXI
+            Xil_Out32(ACCEL_BASEADDR + REG1_DATA_OFFSET, (u32)key);
+
+            // Poll PL status register until status reaches DONE (2)
+            u32 status = 0;
+            do {
+                status = Xil_In32(ACCEL_BASEADDR + REG2_STATUS_OFFSET) & 0x03;
+            } while (status != 2);
+
+            // Read hardware result from PL over AXI
+            u32 result = Xil_In32(ACCEL_BASEADDR + REG3_RESULT_OFFSET);
+            xil_printf("[PL -> PS] Result Readback: %d * %d = %d!\r\n", key, scalar_y, result);
+        }
+    }
+
+    cleanup_platform();
+    return 0;
+}
