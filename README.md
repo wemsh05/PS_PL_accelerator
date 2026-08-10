@@ -76,9 +76,16 @@ Once flashed to the Zynq MPSoC, connect via a serial terminal (115200 baud). The
   [Q] Exit Application
 ===================================================
 ```
+---
 
 ## Current lingering issues
 
 Unfortunately there are still issues that remain to be fixed. This includes: 
 1. The PS side of the DMA expectations are not dynamically updated despite the DMA calculations are returning proper values.
 2. The AXI-Lite MMIO Loop is currently hanging and cannot return calculated values. 
+
+
+## FPGA dev board used
+
+The board is an AXU5EV-P board. 
+![FPGA dev board used](AXU5EV-P_pic.jpg)
