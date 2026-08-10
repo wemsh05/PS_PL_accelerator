@@ -88,4 +88,4 @@ Unfortunately there are still issues that remain to be fixed. This includes:
 ## FPGA dev board used
 
 The board is an AXU5EV-P board. 
-![FPGA dev board used](AXU5EV-P_pic.jpg)
+![FPGA dev board used](/AXU5EV-P_pic.jpg)
