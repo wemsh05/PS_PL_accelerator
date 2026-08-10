@@ -4,6 +4,16 @@ A hybrid hardware/software project for Xilinx Zynq MPSoC demonstrating a pipelin
 
 ---
 
+## Video Demo
+
+### Full Demonstration 
+
+[![Full Demo](https://img.youtube.com/vi/TgjB949D7yg/maxresdefault.jpg)](https://www.youtube.com/watch?v=TgjB949D7yg)
+
+### Quick Overview
+
+[![Short Demo](https://img.youtube.com/vi/jgJ3p5V3GdQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=jgJ3p5V3GdQ)
+
 ## Project Overview
 
 This repository contains both the SystemVerilog RTL for the Programmable Logic (PL) and the bare-metal C driver for the Processing System (PS). 
